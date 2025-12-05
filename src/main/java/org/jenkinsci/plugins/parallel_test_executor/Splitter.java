@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -145,6 +146,18 @@ class Splitter {
                     tr = ((hudson.tasks.junit.TestResult) tr).getResultForPipelineBlock(stageId.getId());
                 } else {
                     listener.getLogger().println("No stage \"" + stageName + "\" found in " + run.getFullDisplayName());
+                    var stages = new TreeSet<String>();
+                    for (var n : new DepthFirstScanner().allNodes(execution)) {
+                        var a = n.getPersistentAction(LabelAction.class);
+                        if (a != null) {
+                            stages.add(a.getDisplayName());
+                        }
+                    }
+                    if (stages.isEmpty()) {
+                        listener.getLogger().println("(No possible stages found.)");
+                    } else {
+                        listener.getLogger().println("(Observed stages: " + stages.stream().collect(Collectors.joining(", ")) + ")");
+                    }
                 }
             } else {
                 listener.getLogger().println("No flow execution found in " + run.getFullDisplayName());
